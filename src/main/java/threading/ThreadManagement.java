@@ -60,7 +60,6 @@ public class ThreadManagement {
     public static void setupHearbeat() {
         Runnable heartbeat = () -> {
             // Statuspage heartbeat
-            HttpClient client = HttpClientBuilder.create().build();
             try {
                 URL web = new URL("https://uptime.betterstack.com/api/v1/heartbeat/F7UDxUpdNi91efmmdJriY4zN");
                 HttpsURLConnection con = (HttpsURLConnection) web.openConnection();
