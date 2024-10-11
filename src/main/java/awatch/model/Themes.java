@@ -37,7 +37,6 @@ public class Themes implements ModelData {
         DataObject res = null;
         try {
             res = data.getObject("data");
-            System.out.println(res.toPrettyString());
             DataArray arr = null;
             arr = res.getArray("openings");
             for(int i=0; i<arr.length(); i++) {

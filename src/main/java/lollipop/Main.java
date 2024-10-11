@@ -66,6 +66,7 @@ public class Main {
 
         // Setup Databases
         Database.setupDatabases();
+//        Database.migrateFromJson(bot.getShards());
 
         // Setup multi-instance duels ai rating system
         DCPUAI.setupRating(bot);

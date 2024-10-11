@@ -47,7 +47,6 @@ public class Review implements ModelData {
             return;
         }
         DataObject res = arr.getObject(0);
-        System.out.println(res.toPrettyString());
         this.authorName = res.getObject("user").getString("username", "Unkown Name");
         this.authorIcon = res.getObject("user").getObject("images").getObject("jpg").getString("image_url", "https://api-private.atlassian.com/users/63729d1b358a0c5f1c38cf368ad9d693/avatar");
         this.authorUrl = res.getObject("user").getString("url", "https://myanimelist.net/reviews.php");
