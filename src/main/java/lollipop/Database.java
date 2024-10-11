@@ -27,6 +27,8 @@ public class Database {
         try {
             SQLDatabase.createTable("currency", "id bigint primary key", "lollipops int");
             currency = SQLDatabase.getTable("currency");
+            System.out.println(currency.getName());
+            System.out.println(currency.getRows("id", "12345678901234")[0][1]);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -39,12 +41,12 @@ public class Database {
      */
     public static int getUserBalance(String id) {
         try {
-            Object[][] query = currency.searchQuery("id", id);
+            Object[][] query = currency.searchQuery("id", id, "lollipops");
             if (query.length == 0) {
                 currency.insertQuery(id, "0");
                 return 0;
             }
-            return (int)query[0][1];
+            return (int)query[0][0];
         } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
@@ -156,9 +158,11 @@ public class Database {
         try {
             ArrayList<LBMember> result = new ArrayList<>();
             HashMap<String, Integer> userToLollipops = new HashMap<>();
-            for (Object id : currency.getColumns("id")[0]) {
-                String ID = Long.toString((long) id);
-                userToLollipops.put(ID, getUserBalance(ID));
+            System.out.println(Arrays.deepToString(currency.getColumns("id")));
+            for (Object[] row : currency.getColumns("id", "lollipops")) {
+                String ID = Long.toString((long) row[0]);
+                int lollipops = (int) row[1];
+                userToLollipops.put(ID, lollipops);
             }
             userToLollipops = Tools.sortByValue(userToLollipops);
             int rank = 0;
@@ -167,6 +171,7 @@ public class Database {
                 if(user == null || user.isBot()) continue;
                 result.add(new LBMember(++rank, user.getName(), userToLollipops.get(id)));
             }
+            System.out.println(result);
             return IntStream.range(0, result.size())
                     .boxed()
                     .collect(Collectors.groupingBy(i -> i / 10))
