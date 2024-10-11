@@ -29,7 +29,8 @@ public class Database {
      */
     public static void setupDatabases() {
         try {
-            SQLDatabase.createTable("currency", "id bigint primary key", "lollipops int");
+//            SQLDatabase.dropTable("currency");
+            SQLDatabase.createTable("currency", "id varchar(32) primary key", "lollipops int");
             currency = SQLDatabase.getTable("currency");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -43,9 +44,9 @@ public class Database {
      */
     public static int getUserBalance(String id) {
         try {
-            Object[][] query = currency.searchQuery("id", id, "lollipops");
+            Object[][] query = currency.searchQuery("id", "'" + id + "'", "lollipops");
             if (query.length == 0) {
-                currency.insertQuery(id, "0");
+                currency.insertQuery("'" + id + "'", "0");
                 return 0;
             }
             return (int)query[0][0];
@@ -67,7 +68,11 @@ public class Database {
                 guildRank.add(lp);
             }
             guildRank.sort(Collections.reverseOrder());
-            ArrayList<Integer> globalRank = Arrays.stream(currency.getColumns("lollipops")[0])
+            ArrayList<Integer> globalRank = Arrays.stream(
+                            Arrays.stream(currency.getColumns("lollipops"))
+                                    .map(a -> a[0])
+                                    .toArray()
+                    )
                     .mapToInt(i -> (int) i)
                     .boxed()
                     .sorted(Collections.reverseOrder())
@@ -105,7 +110,11 @@ public class Database {
      */
     public static int getUserGlobalRank(String id) {
         try {
-            ArrayList<Integer> globalRank = Arrays.stream(currency.getColumns("lollipops")[0])
+            ArrayList<Integer> globalRank = Arrays.stream(
+                            Arrays.stream(currency.getColumns("lollipops"))
+                                    .map(a -> a[0])
+                                    .toArray()
+                    )
                     .mapToInt(i -> (int) i)
                     .boxed()
                     .sorted(Collections.reverseOrder())
@@ -123,7 +132,7 @@ public class Database {
      */
     public static void addToUserBalance(String id, int increment) {
         int balance = getUserBalance(id) + increment;
-        currency.updateQuery("id", id, "lollipops="+Math.max(0, balance));
+        currency.updateQuery("id", "'" + id + "'", "lollipops="+Math.max(0, balance));
     }
 
     /**
@@ -161,7 +170,7 @@ public class Database {
             ArrayList<LBMember> result = new ArrayList<>();
             HashMap<String, Integer> userToLollipops = new HashMap<>();
             for (Object[] row : currency.getColumns("id", "lollipops")) {
-                String ID = Long.toString((long) row[0]);
+                String ID = (String) row[0];
                 int lollipops = (int) row[1];
                 userToLollipops.put(ID, lollipops);
             }
@@ -172,7 +181,7 @@ public class Database {
                 if(user == null || user.isBot()) continue;
                 result.add(new LBMember(++rank, user.getName(), userToLollipops.get(id)));
             }
-            return IntStream.range(0, result.size())
+            return IntStream.range(0, Math.min(result.size(), 100))
                     .boxed()
                     .collect(Collectors.groupingBy(i -> i / 10))
                     .values()
@@ -199,10 +208,10 @@ public class Database {
         try {
             DataObject jsonDb = DataObject.fromJson(new FileReader(".files/currency.json")).getObject("data");
             for(String id : jsonDb.keys())
-                currency.insertQuery(id, Integer.toString(jsonDb.getInt(id)));
+                currency.insertQuery("'" + id + "'", Integer.toString(jsonDb.getInt(id)));
             List<String> ids = jsonDb.keys().stream().toList();
             for(JDA jda : jdas) {
-                for(int i=0; i<350; i++) {
+                for(int i=0; i<300; i++) {
                     int random = (int)(Math.random() * ids.size());
                     User user = jda.getUserById(ids.get(random));
                     while(user == null || user.isBot()) {
@@ -210,7 +219,7 @@ public class Database {
                         user = jda.getUserById(ids.get(random));
                     }
                     int lollipopCount = getUserBalance(ids.get(random)) + (int)(Math.random() * 50);
-                    currency.updateQuery("id", ids.get(random), "lollipops=" + lollipopCount);
+                    currency.updateQuery("id", "'" + ids.get(random) + "'", "lollipops=" + lollipopCount);
                 }
             }
         } catch (FileNotFoundException e) {
